@@ -1,900 +1,699 @@
-<p align="center">
-  <h1 align="center">Flow Navigation Toolkit</h1>
-  <p align="center"><strong>Modern Navigation Library for Vaadin Flow</strong></p>
-</p>
+# Flow Navigation Toolkit
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Java-21-orange?logo=openjdk" alt="Java 21" />
-  <img src="https://img.shields.io/badge/Spring%20Boot-4.0-green?logo=springboot" alt="Spring Boot 4" />
-  <img src="https://img.shields.io/badge/Vaadin-24%2F25-blue?logo=vaadin" alt="Vaadin 24/25" />
-  <img src="https://img.shields.io/badge/Maven%20Central-soon-lightgrey?logo=apachemaven" alt="Maven Central" />
-  <img src="https://img.shields.io/badge/License-MIT-yellow" alt="MIT License" />
-</p>
+[![Java](https://img.shields.io/badge/Java-21-orange)](https://openjdk.org/projects/jdk/21/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.6-green)](https://spring.io/projects/spring-boot)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+> Biblioteca de navegação baseada em stack para aplicações Vaadin Flow, oferecendo controle programático completo sobre o fluxo de navegação com gerenciamento de estado integrado.
+
+---
+
+## Sumário
+
+- [Visão Geral](#visão-geral)
+- [Instalação](#instalação)
+- [Operações de Navegação](#operações-de-navegação)
+  - [push()](#push)
+  - [pop()](#pop)
+  - [replace()](#replace)
+  - [current()](#current)
+  - [previous()](#previous)
+  - [clear()](#clear)
+- [Casos de Uso Práticos](#casos-de-uso-práticos)
+- [Diagramas de Stack](#diagramas-de-stack)
+- [Features Planejadas](#features-planejadas)
+- [Status de Implementação](#status-de-implementação)
+- [Roadmap](#roadmap)
+- [Contribuindo](#contribuindo)
 
 ---
 
 ## Visão Geral
 
-O **Flow Navigation Toolkit** é uma biblioteca de navegação moderna e programática para [Vaadin Flow](https://vaadin.com/flow), inspirada nos padrões de frameworks como **Flutter Navigator 2.0**, **React Router** e **Jetpack Navigation (Android)**.
+O **Flow Navigation Toolkit** é uma biblioteca que implementa um modelo de navegação baseado em stack (pilha) para aplicações [Vaadin Flow](https://vaadin.com/flow). Diferente da navegação padrão do browser, a biblioteca oferece:
 
-A biblioteca oferece uma camada de abstração sobre o sistema de navegação nativo do Vaadin, trazendo recursos avançados que não existem out-of-the-box:
-
-- **Navigation Stack** — push, pop e replace com histórico gerenciado
-- **Navegação Reativa** — Flux de eventos de navegação via Project Reactor
-- **Gerenciamento de Estado** — estado compartilhado observável entre views
-- **Wizard Flows** — engine para fluxos multi-step com validação por etapa
-- **Dialog Navigation** — stack de diálogos com encadeamento e callbacks tipados
-- **Breadcrumbs** — trilha de navegação automática baseada no histórico
-- **Guards & Interceptors** — proteção de rotas e interceptação de navegação
-- **Restore State** — persistência do estado de navegação via VaadinSession
-- **Eventos em Tempo Real** — listeners e streams reativos para cada ação de navegação
-
----
-
-## O Problema do Vaadin Flow
-
-O Vaadin Flow oferece `UI.getCurrent().navigate(...)` como mecanismo principal de navegação. Embora funcional, ele apresenta limitações significativas para aplicações complexas:
-
-### O que o Vaadin **não** possui nativamente
-
-| Recurso | Vaadin Nativo | Flow Navigation Toolkit |
-|---|---|---|
-| Navigation Stack (push/pop) | ❌ | ✅ |
-| Estado compartilhado entre views | ❌ | ✅ |
-| Navegação reativa (Flux/Streams) | ❌ | ✅ |
-| Wizard Engine | ❌ | ✅ |
-| Dialog Stack & Chaining | ❌ | ✅ |
-| Breadcrumbs automáticos | ❌ | ✅ |
-| Guards programáticos | Parcial (`BeforeEnterObserver`) | ✅ Completo |
-| Restore de navegação | ❌ | ✅ |
-| Eventos de navegação tipados | ❌ | ✅ |
-
-### Problemas comuns sem a biblioteca
-
-- **Código acoplado** — lógica de navegação espalhada nas views
-- **Refresh manual** — sem reatividade ao mudar de rota
-- **Navegação inconsistente** — sem stack, sem conceito de "voltar"
-- **Sem estado entre views** — obriga o uso de query parameters ou session attributes manuais
-- **Wizard complexo** — implementação ad-hoc para cada fluxo multi-step
+- **Controle programático** sobre a pilha de navegação
+- **Gerenciamento de estado** entre transições de tela
+- **Navegação com parâmetros** tipados e seguros
+- **Histórico navegável** com suporte a operações push/pop/replace
 
 ---
 
 ## Instalação
 
-### Módulos disponíveis
-
 ```xml
-<!-- Core — obrigatório -->
 <dependency>
-    <groupId>io.flownavigation</groupId>
-    <artifactId>flow-navigation-core</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <groupId>com.ex-rafah-co</groupId>
+    <artifactId>navigation-flow-vd</artifactId>
+    <version>0.1.1-SNAPSHOT</version>
 </dependency>
-
-<!-- Spring Boot Auto-Configuration -->
-<dependency>
-    <groupId>io.flownavigation</groupId>
-    <artifactId>flow-navigation-spring</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-</dependency>
-
-<!-- Navegação Reativa (Project Reactor) -->
-<dependency>
-    <groupId>io.flownavigation</groupId>
-    <artifactId>flow-navigation-reactive</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-</dependency>
-
-<!-- Wizard Engine -->
-<dependency>
-    <groupId>io.flownavigation</groupId>
-    <artifactId>flow-navigation-wizard</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-</dependency>
-
-<!-- Dialog Navigation -->
-<dependency>
-    <groupId>io.flownavigation</groupId>
-    <artifactId>flow-navigation-dialog</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-</dependency>
-
-<!-- Breadcrumbs -->
-<dependency>
-    <groupId>io.flownavigation</groupId>
-    <artifactId>flow-navigation-breadcrumb</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-</dependency>
-```
-
-### Exemplo completo no `pom.xml`
-
-```xml
-<dependencyManagement>
-    <dependencies>
-        <dependency>
-            <groupId>io.flownavigation</groupId>
-            <artifactId>flow-navigation-parent</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
-    </dependencies>
-</dependencyManagement>
-
-<dependencies>
-    <dependency>
-        <groupId>io.flownavigation</groupId>
-        <artifactId>flow-navigation-core</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>io.flownavigation</groupId>
-        <artifactId>flow-navigation-spring</artifactId>
-    </dependency>
-    <!-- Adicione os módulos adicionais conforme necessário -->
-</dependencies>
 ```
 
 ---
 
-## Configuração
+## Operações de Navegação
 
-### `application.yml` (módulo Spring)
+### `push()`
 
-```yaml
-flow-navigation:
-  enabled: true
-  max-stack-size: 50
-  restore-navigation: true
-```
+Adiciona uma nova rota à stack de navegação, mantendo todo o histórico anterior. É a operação mais comum para avançar em um fluxo de navegação.
 
-### Propriedades configuráveis
-
-| Propriedade | Tipo | Padrão | Descrição |
-|---|---|---|---|
-| `flow-navigation.enabled` | `boolean` | `true` | Habilita/desabilita a auto-configuration |
-| `flow-navigation.max-stack-size` | `int` | `50` | Tamanho máximo da navigation stack |
-| `flow-navigation.restore-navigation` | `boolean` | `true` | Restaura o estado de navegação da VaadinSession |
-
----
-
-## Quick Start
-
-### Uso básico do `NavigationManager`
+#### Sintaxe Básica
 
 ```java
-// Injeção via Spring (escopo VaadinSession)
-@Autowired
-private NavigationManager navigationManager;
-
-// Push — navega para uma nova rota
-navigationManager.push("users");
-
-// Push com parâmetros
-navigationManager.push("users/detail", Map.of("userId", 42));
-
-// Push com parâmetros e estado
-navigationManager.push("users/detail",
-    Map.of("userId", 42),
-    Map.of("editMode", true));
-
-// Pop — volta para a rota anterior
-Optional<NavigationEntry> popped = navigationManager.pop();
-
-// Replace — substitui a rota atual sem adicionar ao histórico
-navigationManager.replace("dashboard");
-
-// Consultar rota atual
-Optional<NavigationEntry> current = navigationManager.current();
-
-// Consultar rota anterior
-Optional<NavigationEntry> previous = navigationManager.previous();
+// Navegação simples para uma view
+NavigationFlow.push(ProductListView.class);
 ```
+
+#### Navegação com Parâmetros
+
+```java
+// Navegação com parâmetro de rota
+NavigationFlow.push(ProductDetailView.class, 
+    RouteParam.of("productId", 42L));
+
+// Navegação com múltiplos parâmetros
+NavigationFlow.push(OrderView.class, 
+    RouteParam.of("orderId", 1001L),
+    RouteParam.of("tab", "items"));
+```
+
+#### Navegação com Estado
+
+```java
+// Navegação passando estado complexo entre views
+NavigationState state = NavigationState.builder()
+    .put("selectedItems", selectedItems)
+    .put("filterCriteria", currentFilter)
+    .put("returnAction", "refresh")
+    .build();
+
+NavigationFlow.push(CheckoutView.class, state);
+```
+
+#### Diagrama — Estado da Stack
+
+```
+Antes do push(C):          Depois do push(C):
+┌─────────────┐            ┌─────────────┐
+│             │            │      C      │  ← topo (atual)
+│             │            ├─────────────┤
+│      B      │  ← topo   │      B      │
+├─────────────┤            ├─────────────┤
+│      A      │            │      A      │
+└─────────────┘            └─────────────┘
+```
+
+---
+
+### `pop()`
+
+Remove a rota atual do topo da stack e retorna à rota anterior. Equivale ao "voltar" do browser, mas com controle programático e preservação de estado.
+
+#### Sintaxe Básica
+
+```java
+// Voltar para a view anterior
+NavigationFlow.pop();
+```
+
+#### Navegação com Parâmetros
+
+```java
+// Pop com resultado para a view anterior
+NavigationFlow.pop(NavigationResult.of("status", "confirmed"));
+```
+
+#### Navegação com Estado
+
+```java
+// Pop com estado de retorno (útil para fluxos de seleção)
+NavigationState result = NavigationState.builder()
+    .put("selectedProduct", product)
+    .put("quantity", 3)
+    .build();
+
+NavigationFlow.pop(result);
+
+// Na view anterior, receber o resultado:
+@Override
+public void onNavigationResult(NavigationState resultState) {
+    Product selected = resultState.get("selectedProduct", Product.class);
+    int qty = resultState.get("quantity", Integer.class);
+    // processar resultado...
+}
+```
+
+#### Diagrama — Estado da Stack
+
+```
+Antes do pop():            Depois do pop():
+┌─────────────┐            ┌─────────────┐
+│      C      │  ← topo    │             │
+├─────────────┤            │      B      │  ← topo (atual)
+│      B      │            ├─────────────┤
+├─────────────┤            │      A      │
+│      A      │            └─────────────┘
+└─────────────┘
+```
+
+---
+
+### `replace()`
+
+Substitui a rota atual sem adicionar uma nova entrada ao histórico. A rota substituída é removida permanentemente da stack.
+
+#### Sintaxe Básica
+
+```java
+// Substituir a view atual (ex: após login, substituir a tela de login)
+NavigationFlow.replace(DashboardView.class);
+```
+
+#### Navegação com Parâmetros
+
+```java
+// Replace com parâmetros (ex: redirecionar para versão correta)
+NavigationFlow.replace(ProductDetailView.class, 
+    RouteParam.of("productId", correctProductId));
+```
+
+#### Navegação com Estado
+
+```java
+// Replace com estado (ex: troca de etapa em wizard sem histórico)
+NavigationState wizardState = NavigationState.builder()
+    .put("currentStep", 2)
+    .put("formData", formData)
+    .put("skipBackNavigation", true)
+    .build();
+
+NavigationFlow.replace(WizardStep2View.class, wizardState);
+```
+
+#### Diagrama — Estado da Stack
+
+```
+Antes do replace(D):      Depois do replace(D):
+┌─────────────┐            ┌─────────────┐
+│      C      │  ← topo    │      D      │  ← topo (atual)
+├─────────────┤            ├─────────────┤
+│      B      │            │      B      │
+├─────────────┤            ├─────────────┤
+│      A      │            │      A      │
+└─────────────┘            └─────────────┘
+         C foi removido e substituído por D
+```
+
+---
+
+### `current()`
+
+Retorna a rota atual (topo da stack) sem modificar o estado da navegação.
+
+#### Sintaxe Básica
+
+```java
+// Obter a rota atual
+NavigationEntry current = NavigationFlow.current();
+String viewName = current.getViewClass().getSimpleName();
+```
+
+#### Navegação com Parâmetros
+
+```java
+// Acessar parâmetros da rota atual
+NavigationEntry current = NavigationFlow.current();
+Long productId = current.getParam("productId", Long.class);
+String tab = current.getParam("tab", String.class);
+```
+
+#### Navegação com Estado
+
+```java
+// Acessar estado da rota atual
+NavigationEntry current = NavigationFlow.current();
+NavigationState state = current.getState();
+
+List<Item> items = state.get("selectedItems", List.class);
+FilterCriteria filter = state.get("filterCriteria", FilterCriteria.class);
+```
+
+#### Diagrama — Estado da Stack
+
+```
+current() retorna C:
+┌─────────────┐
+│      C      │  ← current() retorna esta entrada
+├─────────────┤
+│      B      │
+├─────────────┤
+│      A      │
+└─────────────┘
+        Stack não é modificada
+```
+
+---
+
+### `previous()`
+
+Retorna a rota anterior (segunda posição da stack) sem modificar o estado da navegação. Útil para exibir breadcrumbs ou informações de contexto.
+
+#### Sintaxe Básica
+
+```java
+// Obter a rota anterior
+NavigationEntry prev = NavigationFlow.previous();
+if (prev != null) {
+    String previousView = prev.getViewClass().getSimpleName();
+}
+```
+
+#### Navegação com Parâmetros
+
+```java
+// Verificar de onde o usuário veio
+NavigationEntry prev = NavigationFlow.previous();
+if (prev != null && prev.getViewClass() == ProductListView.class) {
+    // Mostrar botão "Voltar para lista"
+    String category = prev.getParam("category", String.class);
+    showBackButton("Voltar para " + category);
+}
+```
+
+#### Navegação com Estado
+
+```java
+// Usar estado da view anterior para contexto
+NavigationEntry prev = NavigationFlow.previous();
+if (prev != null) {
+    NavigationState prevState = prev.getState();
+    String searchTerm = prevState.get("searchTerm", String.class);
+    // Exibir: "Resultado para: {searchTerm}"
+}
+```
+
+#### Diagrama — Estado da Stack
+
+```
+previous() retorna B:
+┌─────────────┐
+│      C      │  ← current (topo)
+├─────────────┤
+│      B      │  ← previous() retorna esta entrada
+├─────────────┤
+│      A      │
+└─────────────┘
+        Stack não é modificada
+```
+
+---
+
+### `clear()`
+
+Limpa toda a stack de navegação, removendo todo o histórico. Geralmente usado ao fazer logout ou ao reiniciar um fluxo.
+
+#### Sintaxe Básica
+
+```java
+// Limpar toda a stack (ex: logout)
+NavigationFlow.clear();
+```
+
+#### Navegação com Parâmetros
+
+```java
+// Limpar e navegar para uma nova raiz
+NavigationFlow.clear();
+NavigationFlow.push(LoginView.class, 
+    RouteParam.of("reason", "session_expired"));
+```
+
+#### Navegação com Estado
+
+```java
+// Limpar com estado de reset
+NavigationFlow.clear();
+
+NavigationState freshState = NavigationState.builder()
+    .put("freshStart", true)
+    .put("previousUser", currentUser.getName())
+    .build();
+
+NavigationFlow.push(HomeView.class, freshState);
+```
+
+#### Diagrama — Estado da Stack
+
+```
+Antes do clear():          Depois do clear():
+┌─────────────┐            ┌─────────────┐
+│      C      │  ← topo    │             │
+├─────────────┤            │             │
+│      B      │            │   (vazia)   │
+├─────────────┤            │             │
+│      A      │            │             │
+└─────────────┘            └─────────────┘
+```
+
+---
+
+## Casos de Uso Práticos
+
+### Quando usar `push()` vs `replace()`
+
+| Cenário | Operação | Justificativa |
+|---------|----------|---------------|
+| Navegar de lista para detalhe | `push()` | Usuário deve poder voltar à lista |
+| Após login bem-sucedido | `replace()` | Não faz sentido "voltar" ao login |
+| Abrir subpágina/aba | `push()` | Preserva contexto de navegação |
+| Redirect após validação | `replace()` | URL corrigida sem histórico |
+| Etapas de wizard | `replace()` | Evita voltar para etapas intermediárias |
+| Seleção de item em modal | `push()` | Modal deve ser "dismissável" com pop |
+
+### Quando usar `pop()`
+
+| Cenário | Exemplo | Resultado |
+|---------|---------|-----------|
+| Botão "Voltar" | Detalhe → Lista | Retorna à lista com filtros preservados |
+| Confirmação de ação | Checkout → Carrinho | Retorna com resultado da operação |
+| Cancelar edição | Form → Detalhe | Descarta alterações e retorna |
+| Fechar overlay | Seletor → Tela anterior | Envia item selecionado via resultado |
+
+### Fluxos Típicos de Navegação
+
+#### Fluxo E-commerce
+
+```java
+// 1. Usuário navega pela loja
+NavigationFlow.push(HomeView.class);
+NavigationFlow.push(CategoryView.class, RouteParam.of("cat", "electronics"));
+NavigationFlow.push(ProductDetailView.class, RouteParam.of("id", 42L));
+
+// 2. Adiciona ao carrinho e vai para checkout
+NavigationFlow.push(CartView.class);
+NavigationFlow.push(CheckoutView.class);
+
+// 3. Após pagamento, substitui por confirmação (sem voltar ao checkout)
+NavigationFlow.replace(OrderConfirmationView.class, 
+    RouteParam.of("orderId", 5001L));
+
+// Stack final: Home → Category → Product → Cart → Confirmation
+```
+
+#### Fluxo de Autenticação
+
+```java
+// 1. Usuário acessa área protegida
+NavigationFlow.push(LoginView.class);
+
+// 2. Login bem-sucedido — substitui login por dashboard
+NavigationFlow.replace(DashboardView.class);
+
+// 3. Logout — limpa tudo e volta ao login
+NavigationFlow.clear();
+NavigationFlow.push(LoginView.class);
+```
+
+#### Fluxo de Wizard (Cadastro)
+
+```java
+// 1. Inicia wizard
+NavigationFlow.push(WizardStep1View.class);
+
+// 2. Avança etapas com replace (não permite "voltar" entre etapas via pop)
+NavigationFlow.replace(WizardStep2View.class, state);
+NavigationFlow.replace(WizardStep3View.class, state);
+
+// 3. Conclusão — substitui por tela de sucesso
+NavigationFlow.replace(WizardCompleteView.class);
+
+// Stack: apenas WizardComplete no topo (etapas intermediárias não ficaram)
+```
+
+---
+
+## Diagramas de Stack
+
+### Visão Geral das Operações
+
+```
+╔══════════════════════════════════════════════════════════════════════╗
+║                    OPERAÇÕES DE NAVEGAÇÃO                           ║
+╠══════════════════════════════════════════════════════════════════════╣
+║                                                                      ║
+║  push(X)          pop()            replace(X)       clear()          ║
+║  ┌───┐           ┌───┐            ┌───┐            ┌───┐           ║
+║  │ X │ ← novo    │   │ removido   │ X │ ← novo     │   │           ║
+║  ├───┤           ├───┤            ├───┤            │   │           ║
+║  │ C │           │ B │ ← topo     │ B │            │   │ (vazia)   ║
+║  ├───┤           ├───┤            ├───┤            │   │           ║
+║  │ B │           │ A │            │ A │            │   │           ║
+║  ├───┤           └───┘            └───┘            └───┘           ║
+║  │ A │                                                               ║
+║  └───┘                                                               ║
+║                                                                      ║
+║  Adiciona ao     Remove do        Substitui o      Remove todas     ║
+║  topo            topo             topo             as entradas       ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+```
+
+### Fluxo Completo — Exemplo Visual
+
+```
+Estado Inicial     push(A)          push(B)          push(C)
+┌─────┐           ┌─────┐          ┌─────┐          ┌─────┐
+│vazia│    →      │  A  │   →      │  B  │   →      │  C  │
+└─────┘           └─────┘          ├─────┤          ├─────┤
+                                   │  A  │          │  B  │
+                                   └─────┘          ├─────┤
+                                                    │  A  │
+                                                    └─────┘
+
+pop()              replace(D)       clear()          push(E)
+┌─────┐           ┌─────┐          ┌─────┐          ┌─────┐
+│  B  │    →      │  D  │   →      │vazia│   →      │  E  │
+├─────┤           ├─────┤          └─────┘          └─────┘
+│  A  │           │  A  │
+└─────┘           └─────┘
+```
+
+---
+
+## Features Planejadas
 
 ### Navegação Reativa
 
+Suporte a observação reativa da stack de navegação, permitindo que componentes da UI reajam automaticamente a mudanças de rota.
+
 ```java
-ReactiveNavigationManager reactiveNav = new ReactiveNavigationManager(navigationManager);
+// Observar mudanças na stack
+NavigationFlow.observe(event -> {
+    switch (event.getType()) {
+        case PUSH -> updateBreadcrumb(event.getEntry());
+        case POP -> animateTransitionBack();
+        case REPLACE -> updateCurrentIndicator();
+        case CLEAR -> resetNavigation();
+    }
+});
 
-// Observar todas as mudanças de rota
-reactiveNav.routeChanges()
-    .subscribe(route -> System.out.println("Navegou para: " + route));
-
-// Filtrar apenas eventos de push
-reactiveNav.pushEvents()
-    .subscribe(event -> log.info("Push: {}", event.route()));
-
-// Observar mudanças de estado
-reactiveNav.stateChanges()
-    .subscribe(event -> log.info("Estado alterado: {}", event.route()));
+// Binding reativo com componentes Vaadin
+NavigationFlow.currentProperty()
+    .addValueChangeListener(e -> {
+        header.setText(e.getValue().getTitle());
+    });
 ```
 
----
+### Wizard Flows
 
-## Módulos
-
-### flow-navigation-core
-
-Módulo principal contendo o engine de navegação e gerenciamento de estado.
-
-**Classes principais:**
-
-| Classe | Descrição |
-|---|---|
-| `NavigationManager` | Gerenciador central de navegação — push, pop, replace, guards, interceptors, listeners |
-| `NavigationStack` | Stack de navegação com tamanho máximo configurável (padrão: 50) |
-| `NavigationEntry` | Representa uma entrada na stack — rota, parâmetros, estado e timestamp |
-| `NavigationContext` | Contexto da navegação atual com rota, rota anterior e estado compartilhado |
-| `NavigationEvent` | Evento de navegação tipado (PUSHED, POPPED, REPLACED, CLEARED) |
-| `NavigationGuard` | Interface funcional para bloqueio/autorização de navegação |
-| `NavigationInterceptor` | Interface para interceptar navegação antes e depois de ocorrer |
-| `NavigationStateStore` | Store de estado compartilhado com suporte a listeners de mudança |
-
-**Features:**
-- Push/pop/replace com parâmetros e estado
-- Guards com resultado ALLOW/DENY/REDIRECT
-- Interceptors before/after navigation
-- Event listeners para cada ação de navegação
-- Estado compartilhado observável via `NavigationStateStore`
-- Stack com overflow automático (remove a entrada mais antiga ao exceder o limite)
-
----
-
-### flow-navigation-spring
-
-Auto-configuration para integração transparente com Spring Boot.
-
-**Classes principais:**
-
-| Classe | Descrição |
-|---|---|
-| `FlowNavigationAutoConfiguration` | `@Configuration` com beans auto-configurados |
-| `FlowNavigationProperties` | `@ConfigurationProperties` para `flow-navigation.*` |
-| `VaadinNavigationIntegration` | Integração com VaadinSession para persistência e restauração |
-
-**Features:**
-- `NavigationManager` com escopo `vaadin-session` via `ScopedProxyMode.TARGET_CLASS`
-- Ativação condicional via `flow-navigation.enabled=true`
-- Persistência automática na VaadinSession
-- Restauração do estado ao recarregar a página
-- Configuração via `application.yml` ou `application.properties`
-
----
-
-### flow-navigation-reactive
-
-Camada reativa sobre o `NavigationManager` usando Project Reactor.
-
-**Classes principais:**
-
-| Classe | Descrição |
-|---|---|
-| `ReactiveNavigationManager` | Wrapper reativo com Flux de eventos |
-| `ReactiveNavigationEvent` | Interface base para eventos reativos |
-| `NavigationPushedEvent` | Evento emitido ao fazer push |
-| `NavigationPoppedEvent` | Evento emitido ao fazer pop |
-| `NavigationReplacedEvent` | Evento emitido ao fazer replace |
-| `NavigationStateChangedEvent` | Evento emitido ao alterar estado compartilhado |
-
-**Features:**
-- `Flux<ReactiveNavigationEvent>` para todos os eventos
-- Streams filtrados: `pushEvents()`, `popEvents()`, `replaceEvents()`, `stateChanges()`
-- `routeChanges()` — Flux de Strings com a rota atual a cada navegação
-- Bridge automático entre `NavigationManager` e o `Sinks.Many` do Reactor
-- Suporte a backpressure via `onBackpressureBuffer()`
-- Método `dispose()` para cleanup do stream
-
----
-
-### flow-navigation-wizard
-
-Engine completo para fluxos multi-step (wizards).
-
-**Classes principais:**
-
-| Classe | Descrição |
-|---|---|
-| `WizardFlow` | Define um wizard com steps ordenados (Builder pattern) |
-| `WizardStep` | Representa um step individual com rota, validação e flag opcional |
-| `WizardNavigator` | Controla a progressão — start, next, previous, finish, cancel |
-| `WizardContext` | Contexto compartilhado entre steps com dados globais e por step |
-| `WizardEvent` | Eventos do wizard (STARTED, STEP_CHANGED, VALIDATION_FAILED, COMPLETED, CANCELLED) |
-
-**Exemplo de uso:**
+Suporte nativo para fluxos de wizard multi-etapas com validação entre etapas e persistência de estado.
 
 ```java
-// Definir o fluxo
-WizardFlow flow = WizardFlow.builder("enrollment")
-    .title("Matrícula do Aluno")
-    .step(WizardStep.builder("personal-data")
-        .title("Dados Pessoais")
-        .route("wizard/personal-data")
-        .validator(ctx -> ctx.get("name", String.class).isPresent())
-        .build())
-    .step(WizardStep.builder("address")
-        .title("Endereço")
-        .route("wizard/address")
-        .build())
-    .step(WizardStep.builder("payment")
-        .title("Pagamento")
-        .route("wizard/payment")
-        .optional(true)
-        .build())
-    .step(WizardStep.builder("confirmation")
-        .title("Confirmação")
-        .route("wizard/confirmation")
-        .build())
+// Definir wizard
+WizardFlow wizard = WizardFlow.builder()
+    .step(PersonalInfoView.class)
+    .step(AddressView.class)
+    .step(PaymentView.class)
+    .step(ConfirmationView.class)
+    .onComplete(state -> processRegistration(state))
+    .onCancel(() -> NavigationFlow.pop())
     .build();
 
-// Navegar pelo wizard
-WizardNavigator wizard = new WizardNavigator(flow);
-WizardStep firstStep = wizard.start();       // Inicia no primeiro step
-
-wizard.getContext().put("name", "João");      // Salvar dados no contexto
-Optional<WizardStep> next = wizard.next();    // Avança para o próximo step
-
-wizard.previous();                            // Volta para o step anterior
-boolean finished = wizard.finish();           // Finaliza o wizard
-
-// Monitorar progresso
-double progress = wizard.getProgress();       // 0.0 a 1.0
-boolean isLast = wizard.isLastStep();
-boolean hasNext = wizard.hasNext();
-
-// Ouvir eventos
-wizard.addEventListener(event -> {
-    switch (event.getType()) {
-        case COMPLETED -> log.info("Wizard finalizado!");
-        case CANCELLED -> log.info("Wizard cancelado!");
-        case VALIDATION_FAILED -> log.warn("Validação falhou no step: {}", event.getStep());
-        default -> {}
-    }
-});
-```
-
----
-
-### flow-navigation-dialog
-
-Gerenciamento de navegação de diálogos com stack, encadeamento e callbacks tipados.
-
-**Classes principais:**
-
-| Classe | Descrição |
-|---|---|
-| `DialogNavigator` | Gerenciador de dialog stack com fluent API |
-| `DialogNavigationEntry<T>` | Entrada na stack de diálogos com parâmetros e handlers |
-| `DialogResult<T>` | Resultado tipado do diálogo (CONFIRMED, CANCELLED, DISMISSED) |
-| `DialogBuilder<T>` | Builder fluente para configurar e abrir diálogos |
-
-**Exemplo de uso:**
-
-```java
-DialogNavigator dialogNav = new DialogNavigator();
-
-// Abrir um diálogo com callback de resultado
-dialogNav.<String>dialog(ConfirmDialog.class)
-    .withParams(Map.of("message", "Deseja excluir?"))
-    .modal(true)
-    .onResult(result -> {
-        if (result.isConfirmed()) {
-            String value = result.getValue().orElse("ok");
-            log.info("Confirmado: {}", value);
-        } else if (result.isCancelled()) {
-            log.info("Cancelado");
-        }
-    })
-    .open();
-
-// Encadear diálogos (chaining)
-dialogNav.<UserData>dialog(UserFormDialog.class)
-    .onResult(result -> {
-        if (result.isConfirmed()) {
-            result.getValue().ifPresent(user -> {
-                // Abrir próximo diálogo após confirmação
-                dialogNav.<Void>dialog(SuccessDialog.class).open();
-            });
-        }
-    })
-    .open();
-
-// Fechar o diálogo ativo com resultado
-dialogNav.closeWithResult(DialogResult.confirmed("dados-salvos"));
-
-// Cancelar ou dispensar
-dialogNav.cancel();
-dialogNav.dismiss();
-
-// Verificar estado
-boolean hasOpen = dialogNav.hasOpenDialogs();
-int count = dialogNav.getDialogCount();
-dialogNav.closeAll();
-```
-
----
-
-### flow-navigation-breadcrumb
-
-Geração automática de breadcrumbs baseada no histórico de navegação.
-
-**Classes principais:**
-
-| Classe | Descrição |
-|---|---|
-| `BreadcrumbTrail` | Gerador e gerenciador da trilha de breadcrumbs |
-| `BreadcrumbItem` | Record representando um item (rota, label, parâmetros, ativo) |
-| `BreadcrumbConfig` | Configuração de labels estáticos, dinâmicos e rota home |
-
-**Features:**
-- Geração automática de trail baseada no histórico do `NavigationManager`
-- Labels estáticos e dinâmicos (função que recebe parâmetros e retorna label)
-- Label padrão por fallback (capitaliza o último segmento da rota)
-- Trail com Home como primeiro item
-- Navegação direta para qualquer item do breadcrumb (pop back até a rota)
-- Deduplicação automática de rotas na trail
-
-**Exemplo de configuração:**
-
-```java
-BreadcrumbConfig config = new BreadcrumbConfig()
-    .home("/", "Início")
-    .route("/users", "Usuários")
-    .route("/users/new", "Novo Usuário")
-    .dynamicRoute("/users/detail", params ->
-        "Usuário #" + params.getOrDefault("userId", "?"));
-
-BreadcrumbTrail trail = new BreadcrumbTrail(navigationManager, config);
-
-// Obter trail
-List<BreadcrumbItem> items = trail.getTrailWithHome();
-// [Início > Usuários > Usuário #42]
-
-// Navegar para um item
-trail.navigateTo(items.get(1)); // Volta para "Usuários"
-```
-
----
-
-## Gerenciamento de Estado
-
-O `NavigationStateStore` permite compartilhar estado entre views de forma observável.
-
-### Uso básico
-
-```java
-NavigationManager nav = new NavigationManager();
-
-// Armazenar estado
-nav.state().put("currentUser", user);
-nav.state().put("theme", "dark");
-
-// Recuperar estado tipado
-Optional<User> user = nav.state().get("currentUser", User.class);
-Optional<String> theme = nav.state().get("theme", String.class);
-
-// Verificar e remover
-boolean exists = nav.state().contains("currentUser");
-nav.state().remove("currentUser");
-
-// Obter todo o estado
-Map<String, Object> allState = nav.state().getAll();
-```
-
-### Estado observável com listeners
-
-```java
-// Registrar listener de mudanças
-nav.state().addListener(change -> {
-    log.info("Estado alterado: key={}, old={}, new={}",
-        change.key(), change.oldValue(), change.newValue());
-});
-
-// Qualquer put/remove dispara o listener
-nav.state().put("counter", 1);   // listener chamado: key=counter, old=null, new=1
-nav.state().put("counter", 2);   // listener chamado: key=counter, old=1, new=2
-nav.state().remove("counter");   // listener chamado: key=counter, old=2, new=null
-```
-
-### Estado por NavigationEntry
-
-Cada `NavigationEntry` também carrega seu próprio estado:
-
-```java
-nav.push("checkout", Map.of("step", 1), Map.of("cartTotal", 99.90));
-
-NavigationEntry current = nav.current().orElseThrow();
-Map<String, Object> entryState = current.getState();  // {cartTotal=99.90}
-Map<String, Object> entryParams = current.getParams(); // {step=1}
-```
-
----
-
-## Segurança
-
-### Navigation Guards
-
-Guards permitem bloquear ou autorizar navegação antes que ela ocorra:
-
-```java
-NavigationManager nav = new NavigationManager();
-
-// Guard de autenticação
-nav.beforeEach((context, target) -> {
-    if (target.startsWith("admin/") && !isAuthenticated()) {
-        return NavigationGuard.GuardResult.DENY;
-    }
-    return NavigationGuard.GuardResult.ALLOW;
-});
-
-// Guard de autorização por role
-nav.beforeEach((context, target) -> {
-    if (target.equals("settings") && !hasRole("ADMIN")) {
-        return NavigationGuard.GuardResult.REDIRECT;
-    }
-    return NavigationGuard.GuardResult.ALLOW;
-});
-
-// Tentativa de navegação — bloqueada se o guard retornar DENY
-boolean success = nav.push("admin/dashboard"); // false se não autenticado
-```
-
-### Interceptors
-
-Interceptors permitem executar lógica antes e depois da navegação:
-
-```java
-nav.addInterceptor(new NavigationInterceptor() {
-    @Override
-    public void beforeNavigation(String from, String to) {
-        log.info("Saindo de '{}' para '{}'", from, to);
-        // Analytics, logging, salvar estado, etc.
-    }
-
-    @Override
-    public void afterNavigation(String from, String to) {
-        log.info("Chegou em '{}' vindo de '{}'", to, from);
-        // Atualizar breadcrumbs, counters, etc.
-    }
-});
-```
-
-### Event Listeners
-
-```java
-nav.addEventListener(event -> {
-    switch (event.getType()) {
-        case PUSHED -> log.info("Push para: {}", event.getEntry().getRoute());
-        case POPPED -> log.info("Pop de: {}", event.getEntry().getRoute());
-        case REPLACED -> log.info("Replace com: {}", event.getEntry().getRoute());
-        case CLEARED -> log.info("Stack limpa");
-    }
-});
-```
-
----
-
-## Integração com Vaadin
-
-### Hooks utilizados
-
-O Flow Navigation Toolkit integra com o ciclo de vida do Vaadin através dos seguintes mecanismos:
-
-| Mecanismo Vaadin | Uso na Biblioteca |
-|---|---|
-| `VaadinSession` | Persistência do `NavigationManager` e estado de navegação |
-| `@Scope("vaadin-session")` | Escopo do bean `NavigationManager` no Spring |
-| `BeforeEnterObserver` | Base para guards de navegação (verificação de acesso) |
-| `AfterNavigationObserver` | Base para interceptors pós-navegação |
-
-### Integração com VaadinSession
-
-A `VaadinNavigationIntegration` gerencia automaticamente:
-
-```java
-// Obter o NavigationManager da sessão atual
-VaadinNavigationIntegration integration = new VaadinNavigationIntegration(properties);
-NavigationManager nav = integration.getNavigationManager();
-
-// Persistir estado (chamado automaticamente pelo módulo Spring)
-integration.persistState(VaadinSession.getCurrent(), nav);
-
-// Restaurar estado após page refresh
-NavigationManager restored = integration.restoreState(VaadinSession.getCurrent());
-```
-
-### Compatibilidade com `@Push`
-
-A biblioteca é compatível com `@Push` do Vaadin. Os eventos reativos do `ReactiveNavigationManager` podem ser consumidos em conjunto com push updates para atualizar a UI em tempo real.
-
----
-
-## Arquitetura
-
-### Diagrama de componentes
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Views (Vaadin)                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   ┌─────────────┐  ┌──────────────┐  ┌───────────────────┐    │
-│   │ Navigation  │  │   Dialog     │  │    Wizard         │    │
-│   │    API      │  │  Navigator   │  │   Navigator       │    │
-│   └──────┬──────┘  └──────┬───────┘  └────────┬──────────┘    │
-│          │                │                    │               │
-│   ┌──────▼──────────────────────────────────────────────┐      │
-│   │              NavigationManager                       │      │
-│   │  ┌────────────┐ ┌──────────┐ ┌────────────────┐    │      │
-│   │  │   Guards   │ │ Intercep.│ │  Event Listeners│    │      │
-│   │  └────────────┘ └──────────┘ └────────────────┘    │      │
-│   └──────┬──────────────────┬───────────────────────────┘      │
-│          │                  │                                   │
-│   ┌──────▼──────┐   ┌──────▼──────────┐                       │
-│   │ Navigation  │   │   Navigation    │                       │
-│   │   Stack     │   │  State Store    │                       │
-│   └──────┬──────┘   └──────┬──────────┘                       │
-│          │                  │                                   │
-│   ┌──────▼──────────────────▼──────────┐                       │
-│   │       Reactive Events (Flux)       │                       │
-│   │    ReactiveNavigationManager       │                       │
-│   └──────┬─────────────────────────────┘                       │
-│          │                                                      │
-│   ┌──────▼──────────────────────────────┐                      │
-│   │        VaadinSession (Persist)      │                      │
-│   └─────────────────────────────────────┘                      │
-│                                                                 │
-├─────────────────────────────────────────────────────────────────┤
-│                   Spring Boot Auto-Configuration                │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Estratégia de navegação
-
-A biblioteca mantém uma **stack própria** (`NavigationStack`) separada do browser history. Isso permite:
-- Push/pop/replace sem afetar o histórico do navegador
-- Controle total sobre a ordem de navegação
-- Stack com limite máximo configurável (overflow automático)
-
-### Estratégia de persistência
-
-O estado de navegação é persistido na **VaadinSession**, garantindo:
-- Sobrevivência a page refreshes (F5)
-- Isolamento por sessão de usuário
-- Cleanup automático quando a sessão expira
-
----
-
-## Exemplos de Uso
-
-### Navegação básica completa
-
-```java
-@Route(value = "users", layout = MainLayout.class)
-public class UsersView extends VerticalLayout implements BeforeEnterObserver {
-
-    private final NavigationManager nav;
-
-    public UsersView(NavigationManager nav) {
-        this.nav = nav;
-
-        Button detailBtn = new Button("Ver Detalhes", e -> {
-            nav.push("users/detail", Map.of("userId", 42));
-        });
-
-        Button backBtn = new Button("Voltar", e -> {
-            nav.pop();
-        });
-
-        add(detailBtn, backBtn);
-    }
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        // Sincronizar a stack ao entrar na view
-        nav.push("users");
-    }
-}
-```
-
-### Wizard Flow completo
-
-```java
-@Route(value = "enrollment", layout = MainLayout.class)
-public class EnrollmentView extends VerticalLayout {
-
-    private final WizardNavigator wizard;
-
-    public EnrollmentView() {
-        WizardFlow flow = WizardFlow.builder("enrollment")
-            .title("Matrícula")
-            .step(WizardStep.builder("step1").title("Dados").route("enrollment/data").build())
-            .step(WizardStep.builder("step2").title("Documentos").route("enrollment/docs").build())
-            .step(WizardStep.builder("step3").title("Pagamento").route("enrollment/payment").build())
-            .build();
-
-        this.wizard = new WizardNavigator(flow);
-
-        ProgressBar progress = new ProgressBar();
-        Button nextBtn = new Button("Próximo", e -> {
-            wizard.next();
-            progress.setValue(wizard.getProgress());
-        });
-        Button prevBtn = new Button("Anterior", e -> {
-            wizard.previous();
-            progress.setValue(wizard.getProgress());
-        });
-        Button finishBtn = new Button("Finalizar", e -> {
-            if (wizard.finish()) {
-                Notification.show("Matrícula concluída!");
-            }
-        });
-
-        wizard.start();
-        progress.setValue(wizard.getProgress());
-
-        add(progress, new HorizontalLayout(prevBtn, nextBtn, finishBtn));
-    }
-}
+// Iniciar wizard
+NavigationFlow.pushWizard(wizard);
 ```
 
 ### Dialog Navigation
 
-```java
-DialogNavigator dialogNav = new DialogNavigator();
+Navegação integrada com diálogos e overlays, tratando-os como entradas na stack.
 
-// Abrir diálogo de confirmação
-dialogNav.<Boolean>dialog(ConfirmDeleteDialog.class)
-    .withParams(Map.of("entityName", "Aluno", "entityId", 123))
-    .modal(true)
-    .onResult(result -> {
-        if (result.isConfirmed()) {
-            deleteEntity(123);
-            Notification.show("Removido com sucesso");
-        }
-    })
-    .open();
+```java
+// Abrir dialog como parte da navegação
+NavigationFlow.pushDialog(SelectProductDialog.class, params);
+
+// O dialog pode retornar resultado via pop
+// Dentro do dialog:
+NavigationFlow.pop(NavigationResult.of("product", selectedProduct));
 ```
 
-### Navegação Reativa
+### Breadcrumbs
+
+Geração automática de breadcrumbs baseada na stack de navegação atual.
 
 ```java
-ReactiveNavigationManager reactiveNav = new ReactiveNavigationManager(nav);
+// Componente de breadcrumb automático
+BreadcrumbNav breadcrumb = new BreadcrumbNav();
+breadcrumb.setMaxDepth(4);
+breadcrumb.setClickable(true);
 
-// Atualizar badge com contagem de navegações
-reactiveNav.pushEvents()
-    .map(event -> event.route())
-    .subscribe(route -> {
-        analytics.track("page_view", route);
+// Ou manual
+List<NavigationEntry> trail = NavigationFlow.getStack();
+trail.forEach(entry -> {
+    breadcrumb.addItem(entry.getTitle(), () -> {
+        NavigationFlow.popTo(entry);
     });
-
-// Reagir a mudanças de estado
-reactiveNav.stateChanges()
-    .filter(event -> "theme".equals(event.route()))
-    .subscribe(event -> updateTheme());
+});
 ```
 
-### Guards completo
+### Guards / Interceptors
+
+Sistema de guardas e interceptors para controle de acesso e validação antes/depois de cada navegação.
 
 ```java
-NavigationManager nav = new NavigationManager();
-
-// Guard: requer autenticação
-nav.beforeEach((context, target) -> {
-    List<String> publicRoutes = List.of("login", "register", "forgot-password");
-    if (publicRoutes.contains(target)) {
-        return NavigationGuard.GuardResult.ALLOW;
-    }
-    return isAuthenticated()
-        ? NavigationGuard.GuardResult.ALLOW
-        : NavigationGuard.GuardResult.DENY;
-});
-
-// Guard: role-based access
-nav.beforeEach((context, target) -> {
-    if (target.startsWith("admin/") && !currentUser.hasRole("ADMIN")) {
-        return NavigationGuard.GuardResult.DENY;
-    }
-    return NavigationGuard.GuardResult.ALLOW;
-});
-
-// Interceptor: logging
-nav.addInterceptor(new NavigationInterceptor() {
+// Guard de autenticação
+NavigationFlow.addGuard(new NavigationGuard() {
     @Override
-    public void beforeNavigation(String from, String to) {
-        auditLog.record("NAV", from, to, currentUser.getId());
+    public GuardResult beforeNavigation(NavigationContext context) {
+        if (requiresAuth(context.getTarget()) && !isAuthenticated()) {
+            return GuardResult.redirect(LoginView.class);
+        }
+        return GuardResult.allow();
+    }
+});
+
+// Interceptor de analytics
+NavigationFlow.addInterceptor(new NavigationInterceptor() {
+    @Override
+    public void afterNavigation(NavigationContext context) {
+        analytics.trackPageView(context.getTarget().getRoute());
+    }
+});
+
+// Guard de formulário não salvo
+NavigationFlow.addGuard(new UnsavedChangesGuard() {
+    @Override
+    public GuardResult beforeLeave(NavigationContext context) {
+        if (hasUnsavedChanges()) {
+            return GuardResult.confirm("Deseja sair sem salvar?");
+        }
+        return GuardResult.allow();
     }
 });
 ```
+
+### Gerenciamento de Estado
+
+Sistema completo de gerenciamento de estado integrado à navegação, com escopo por view e compartilhamento entre views.
+
+```java
+// Estado com escopo de view (limpo automaticamente ao sair)
+NavigationFlow.setState("formData", formData, StateScope.VIEW);
+
+// Estado compartilhado entre views (persiste na sessão)
+NavigationFlow.setState("cart", cartItems, StateScope.SESSION);
+
+// Estado com escopo de fluxo (persiste enquanto estiver no fluxo)
+NavigationFlow.setState("wizardData", data, StateScope.FLOW);
+
+// Recuperar estado
+CartData cart = NavigationFlow.getState("cart", CartData.class);
+```
+
+---
+
+## Status de Implementação
+
+| Feature | Status | Versão Alvo |
+|---------|--------|-------------|
+| `push()` | :yellow_circle: Planejado | 0.2.0 |
+| `pop()` | :yellow_circle: Planejado | 0.2.0 |
+| `replace()` | :yellow_circle: Planejado | 0.2.0 |
+| `current()` | :yellow_circle: Planejado | 0.2.0 |
+| `previous()` | :yellow_circle: Planejado | 0.2.0 |
+| `clear()` | :yellow_circle: Planejado | 0.2.0 |
+| Navegação com Parâmetros | :yellow_circle: Planejado | 0.2.0 |
+| Navegação com Estado | :yellow_circle: Planejado | 0.3.0 |
+| Navegação Reativa | :red_circle: Futuro | 0.4.0 |
+| Wizard Flows | :red_circle: Futuro | 0.5.0 |
+| Dialog Navigation | :red_circle: Futuro | 0.5.0 |
+| Breadcrumbs | :red_circle: Futuro | 0.6.0 |
+| Guards / Interceptors | :red_circle: Futuro | 0.6.0 |
+| Gerenciamento de Estado | :red_circle: Futuro | 0.7.0 |
+
+**Legenda:**
+- :green_circle: Implementado — disponível e testado
+- :yellow_circle: Planejado — design definido, implementação em andamento
+- :red_circle: Futuro — conceito definido, implementação não iniciada
 
 ---
 
 ## Roadmap
 
-| Versão | Features |
-|---|---|
-| **v1.0** | Push/pop, replace, navigation stack, route state, shared state store, guards, interceptors |
-| **v2.0** | Reactive navigation (Flux), dialog navigation, navigation events |
-| **v3.0** | Wizard engine, deep linking, restore state, breadcrumbs |
-| **v4.0** | Animated transitions, mobile-optimized navigation, collaborative navigation |
-
----
-
-## Stack Tecnológica
-
-| Tecnologia | Versão | Propósito |
-|---|---|---|
-| Java | 21 | Linguagem base (records, sealed classes, pattern matching) |
-| Spring Boot | 4.0.6 | Auto-configuration e dependency injection |
-| Vaadin | 24.7.3 (compat 24/25) | Framework web — integração com VaadinSession |
-| Project Reactor | 3.7.6 | Streams reativos para eventos de navegação |
-| Maven | 3.9+ | Build e gerenciamento de dependências |
-| SLF4J | 2.0.16 | Logging |
-| Jakarta EE | 10 | Especificações Jakarta (Servlet, CDI) |
-| JUnit 5 | 5.11.4 | Testes unitários |
-| Mockito | 5.15.2 | Mocking para testes |
-
----
-
-## Contribuição
-
-Contribuições são bem-vindas! Siga os passos abaixo:
-
-### Setup de desenvolvimento
-
-```bash
-# Clone o repositório
-git clone https://github.com/RafaJMoraes/navigation-flow-vd.git
-cd navigation-flow-vd
-
-# Checkout na branch de desenvolvimento
-git checkout develop
-
-# Build completo
-./mvnw clean install
-
-# Executar testes
-./mvnw test
-
-# Executar a aplicação demo
-cd flow-navigation-demo
-../mvnw spring-boot:run
+```
+v0.1.x (atual)    Estrutura base do projeto
+       │
+       ▼
+v0.2.0            Core Navigation (push, pop, replace, current, previous, clear)
+       │           + Navegação com parâmetros tipados
+       ▼
+v0.3.0            State Management
+       │           + Navegação com estado entre views
+       │           + Escopos de estado (VIEW, SESSION, FLOW)
+       ▼
+v0.4.0            Reactive Navigation
+       │           + Observadores de mudança de rota
+       │           + Property binding com componentes Vaadin
+       ▼
+v0.5.0            Advanced Flows
+       │           + Wizard Flows multi-etapas
+       │           + Dialog Navigation
+       ▼
+v0.6.0            Navigation UX
+       │           + Breadcrumbs automáticos
+       │           + Guards e Interceptors
+       │           + Proteção de formulários não salvos
+       ▼
+v0.7.0            Full State Management
+                   + Estado compartilhado entre views
+                   + Persistência de estado
+                   + Serialização/restauração de stack
 ```
 
-### Processo de Pull Request
+---
 
-1. Faça fork do repositório
-2. Crie sua feature branch: `git checkout -b feature/minha-feature`
-3. Faça commit das alterações: `git commit -m "feat: descrição da feature"`
-4. Push para a branch: `git push origin feature/minha-feature`
-5. Abra um Pull Request para a branch `develop`
+## Contribuindo
 
-### Guidelines
+Contribuições são bem-vindas! Este projeto está em fase inicial de desenvolvimento.
 
-- Siga o padrão de código existente
-- Adicione testes para novas funcionalidades
-- Use [Conventional Commits](https://www.conventionalcommits.org/)
-- Documente APIs públicas com Javadoc
-- Mantenha compatibilidade com Java 21+
+### Pré-requisitos
+
+- Java 21+
+- Maven 3.9+
+
+### Build
+
+```bash
+./mvnw clean install
+```
+
+### Testes
+
+```bash
+./mvnw test
+```
 
 ---
 
 ## Licença
 
-Este projeto está licenciado sob a **MIT License** — veja o arquivo [LICENSE](LICENSE) para detalhes.
-
----
-
-## Links Úteis
-
-- [Repositório](https://github.com/RafaJMoraes/navigation-flow-vd)
-- [Issues](https://github.com/RafaJMoraes/navigation-flow-vd/issues)
-- [Releases](https://github.com/RafaJMoraes/navigation-flow-vd/releases)
-- [Vaadin Flow Documentation](https://vaadin.com/docs/latest/flow)
-- [Spring Boot Reference](https://docs.spring.io/spring-boot/reference/)
-- [Project Reactor](https://projectreactor.io/)
-
----
-
-<p align="center">
-  Desenvolvido por <a href="https://github.com/RafaJMoraes">Rafael Junior de Moraes</a>
-</p>
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
