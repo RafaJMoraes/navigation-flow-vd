@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: flow-navigation-demo
+
+flow-navigation:
+  enabled: true
+  max-stack-size: 50
+  restore-navigation: true
+
+server:
+  port: 8080
