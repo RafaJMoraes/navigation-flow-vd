@@ -92,6 +92,56 @@ public class NavigationManager {
     }
 
     /**
+     * Pop the current route from the stack and push a new route.
+     * The current route is removed from the history before navigating to the new route,
+     * similar to popAndPushNamed in Flutter or replace-style navigation in React Router.
+     */
+    public boolean popAndPush(String route) {
+        return popAndPush(route, Map.of(), Map.of());
+    }
+
+    /**
+     * Pop the current route and push a new route with parameters.
+     */
+    public boolean popAndPush(String route, Map<String, Object> params) {
+        return popAndPush(route, params, Map.of());
+    }
+
+    /**
+     * Pop the current route and push a new route with parameters and state.
+     */
+    public boolean popAndPush(String route, Map<String, Object> params, Map<String, Object> state) {
+        String currentRoute = current().map(NavigationEntry::getRoute).orElse(null);
+
+        if (!checkGuards(currentRoute, route)) {
+            log.debug("Pop and push to '{}' blocked by guard", route);
+            return false;
+        }
+
+        interceptors.forEach(i -> i.beforeNavigation(currentRoute, route));
+
+        Optional<NavigationEntry> popped = stack.pop();
+        popped.ifPresent(entry -> {
+            String afterPopRoute = current().map(NavigationEntry::getRoute).orElse(null);
+            fireEvent(NavigationEvent.popped(entry, afterPopRoute));
+        });
+
+        NavigationEntry entry = NavigationEntry.builder(route)
+                .params(params)
+                .state(state)
+                .origin(currentRoute)
+                .build();
+
+        stack.push(entry);
+
+        interceptors.forEach(i -> i.afterNavigation(currentRoute, route));
+        fireEvent(NavigationEvent.pushed(entry, currentRoute));
+
+        log.info("Pop and pushed from: {} to: {}", currentRoute, route);
+        return true;
+    }
+
+    /**
      * Replace the current route without adding to history.
      */
     public boolean replace(String route, Map<String, Object> params, Map<String, Object> state) {
